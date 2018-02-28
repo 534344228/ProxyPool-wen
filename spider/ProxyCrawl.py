@@ -5,13 +5,16 @@ import config
 
 from gevent.pool import Pool
 from gevent import monkey
+
 monkey.patch_all()
+
 from multiprocessing import Queue, Process, Value
 
 from Database import DataStore
 from Database.DataStore import sql
 from spider.HtmlDownloader import Html_Downloader
 from spider.HtmlParser import Html_Parser
+from validator.Validator import detect_from_db
 
 
 def startProxyCrawl(queue, db_proxy_num, myip):
@@ -37,6 +40,7 @@ class ProxyCrawl(object):
             sys.stdout.flush()
             # 1.从数据库取数据,检查已经存在的ip代理
             proxylist = sql.select()
+            print(proxylist)
             """
             协程的作用，是在执行函数A时，可以随时中断，去执行函数B，然后中断继续执行函数A（可以自由切换）。
             但这一过程并不是函数调用（没有调用语句），这一整个过程看似像多线程，然而协程只有一个线程执行。
@@ -47,10 +51,12 @@ class ProxyCrawl(object):
                 spawns.append(gevent.spawn(detect_from_db, self.myip, proxy, self.proxies))
                 if len(spawns) >= config.MAX_CHECK_CONCURRENT_PER_PROCESS:
                     # gevent.joinall()会等待所有传入的greenlet协程运行结束后再退出，timeout参数来设置超时时间，单位是秒
+                    # joinall就是用来启动事件轮询并等待运行结果的
+                    # 论询--依序询问每一个周边设备是否需要其服务，有即给予服务，服务结束后再问下一个周边
                     gevent.joinall(spawns)
                     spawns = []
             gevent.joinall(spawns)
-            self.db_proyx_num.value = len(self.proxies)
+            self.db_proxy_num.value = len(self.proxies)
             str = 'IPProxyPool----->>>>>>>>db exists ip:%d' % len(self.proxies)
 
             # 2.ip代理数量小于最小数量
@@ -81,22 +87,24 @@ class ProxyCrawl(object):
                 if proxylist is not None:
                     for proxy in proxylist:
                         proxt_str = '%s:%s' % (proxy['ip'], proxy['port'])
+                        # print("解析出来IP : {}".format(proxt_str))
                         if proxt_str not in self.proxies:
                             self.proxies.add(proxt_str)
                             while True:
                                 if self.queue.full():
                                     time.sleep(0.1)
                                 else:
+
                                     self.queue.put(proxy)
                                     break
 
 
-if __name__ == "__main__":
+def test01(s):
     # 进程间数据共享
     # 共享内存有两种结构 一个是Value,一个是Array，都在内部实现了锁机制，因此多进程安全
     # i是int类型,d是double类型
     DB_PROXY_NUM = Value('i', 0)
-    # queue 共享的进程队列
+
     q1 = Queue()
     q2 = Queue()
     # Process(taget=函数名,args=函数参数)
@@ -107,3 +115,7 @@ if __name__ == "__main__":
     p1.start()
     p2.start()
     p3.start()
+
+
+if __name__ == "__main__":
+    pass

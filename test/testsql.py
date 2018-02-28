@@ -1,5 +1,6 @@
 from Database.RedisSql import RedisSql
 from Database.MongoSql import MongoSql
+from config import DB_CONFIG
 
 
 def testMongo():
@@ -37,6 +38,23 @@ def test_redis():
     # assert sqlhelper.delete({'types': 1}) == 1
     # # sqlhelper.drop_db()
     # print('All pass.')
+
+
+def test_conn():
+    try:
+        print(DB_CONFIG)
+        if DB_CONFIG['DB_CONNECT_TYPE'] == 'pymongo':
+            from Database.MongoSql import MongoSql as Sql
+        elif DB_CONFIG['DB_CONNECT_TYPE'] == 'redis':
+            from Database.RedisSql import RedisSql as Sql
+        else:
+            from Database.Sql import Sql as Sql
+        sql = Sql()
+        sql.init_db()
+        print("successful")
+    except Exception as e:
+        print("FFFFFF")
+        pass
 
 
 if __name__ == '__main__':

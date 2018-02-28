@@ -14,9 +14,9 @@ class Html_Parser(object):
         return:
         """
         if parser['type'] == 'xpath':
-            return self.XpathPraser(response, parser)
+            return self.XpathParser(response, parser)
         elif parser['type'] == 'regular':
-            return self.RegularPraser(response, parser)
+            return self.RegularParser(response, parser)
         elif parser['type'] == 'module':
             return getattr(self, parser['moduleName'], None)(response, parser)
         else:
@@ -43,12 +43,13 @@ class Html_Parser(object):
         proxys = root.xpath(parser['pattern'])  # 整个页面的代理内容
         for proxy in proxys:
             try:
-                ip = proxy.xpath(parser['positionn']['ip'])[0].text
+                ip = proxy.xpath(parser['position']['ip'])[0].text
                 port = proxy.xpath(parser['position']['port'])[0].text
                 type = 0
                 protocol = 0
                 country = text_('')
                 area = text_('')
+
                 # 对IP地址地理位置判断
                 # addr = self.ips.getIpAdder(self.ips.str2ip(ip))
                 # if text_('省') in addr or self.AuthCountry(addr):
@@ -59,6 +60,7 @@ class Html_Parser(object):
                 #     area = addr
             except Exception as e:
                 print(e)
+                print("XpathParser Error")
                 continue
 
             proxy = {'ip': ip, 'port': int(port), 'types': int(type), 'protocol': int(protocol), 'country': country,
@@ -81,14 +83,14 @@ class Html_Parser(object):
                     protocol = 0
                     country = text_('')
                     area = text_('')
-                   # 对IP地址地理位置判断
-                   #  addr = self.ips.getIpAdder(self.ips.str2ip(ip))
-                   #  if text_('省') in addr or self.AuthCountry(addr):
-                   #      country = text_('国内')
-                   #      area = addr
-                   #  else:
-                   #      country = text_('国外')
-                   #      area = addr
+                    # 对IP地址地理位置判断
+                    #  addr = self.ips.getIpAdder(self.ips.str2ip(ip))
+                    #  if text_('省') in addr or self.AuthCountry(addr):
+                    #      country = text_('国内')
+                    #      area = addr
+                    #  else:
+                    #      country = text_('国外')
+                    #      area = addr
                 except Exception as e:
                     print(e)
                     continue
@@ -120,7 +122,10 @@ class Html_Parser(object):
             for match in matchs:
                 try:
                     # 对ip使用64base进行解码
-                    ip_port = base64.b64decode(match.replace("Proxy('", "").replace("')", ""))
+                    ip_port_temp = base64.b64decode(match.replace("Proxy('", "").replace("')", ""))
+                    # 解码后重新编码成str类型
+                    ip_port = ip_port_temp.decode()
+                    # 再进行切分
                     ip = ip_port.split(':')[0]
                     port = ip_port.split(':')[1]
                     type = 0

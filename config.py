@@ -6,7 +6,7 @@ import random
          patten：可以是正则表达式,可以是xpath语句, 要和上面的相对应
 
 
-ip，端口，类型(0高匿名，1透明)，protocol(0 http,1 https),country(国家),area(省市),updatetime(更新时间)
+ip，端口，type类型(0 高匿,1匿名,2 透明)，protocol(0 http, 1 https, 2 http/https),country(国家),area(省市),updatetime(更新时间)
  speed(连接速度)
 '''
 
@@ -41,7 +41,7 @@ parserList = [
     {
         'urls': ['https://proxy-list.org/english/index.php?p=%s' % n for n in range(1, 10)],
         'type': 'module',
-        'moduleName': 'proxy_listPraser',
+        'moduleName': 'proxy_listParser',
         'pattern': 'Proxy\(.+\)',
         'position': {'ip': 0, 'port': -1, 'type': -1, 'protocol': 2}
 
@@ -91,7 +91,7 @@ parserList = [
     {
         'urls': ['http://www.cnproxy.com/proxy%s.html' % i for i in range(1, 11)],
         'type': 'module',
-        'moduleName': 'CnproxyPraser',
+        'moduleName': 'CnproxyParser',
         'pattern': r'<tr><td>(\d+\.\d+\.\d+\.\d+)<SCRIPT type=text/javascript>document.write\(\"\:\"(.+)\)</SCRIPT></td><td>(HTTP|SOCKS4)\s*',
         'position': {'ip': 0, 'port': 1, 'type': -1, 'protocol': 2}
     }
@@ -101,22 +101,21 @@ parserList = [
 数据库的配置
 '''
 DB_CONFIG = {
-    '''使用mongoDB连接，格式，数据库默认为proxy'''
+    # '''使用mongoDB连接，格式，数据库默认为proxy'''
     # 'DB_CONNECT_NAME': 'wen',
     # 'DB_CONNECT_PWD': 'wenboyu',
     # 'DB_CONNECT_TYPE': 'pymongo',
     # 'DB_CONNECT_STRING': 'mongodb://118.89.159.211:27017/'
 
-    '''mysql'''
+    # '''mysql'''
     # 'DB_CONNECT_TYPE': 'mysql',
     # 使用pymysql连接，格式：
     # mysql+mysqlconnector://<user>:<password>@<host>[:<port>]/<dbname>
     # 'DB_CONNECT_STRING': 'mysql+mysqlconnector://hive:hive@118.89.159.211/news_test?charset=utf8'
 
-    '''Redis'''
+    # '''Redis'''
     'DB_CONNECT_TYPE': 'redis',
     'DB_CONNECT_STRING': 'redis://user:wenboyu@118.89.150.14:6379/0'
-
 
 }
 CHINA_AREA = ['河北', '山东', '辽宁', '黑龙江', '吉林', '甘肃',
@@ -128,23 +127,16 @@ CHINA_AREA = ['河北', '山东', '辽宁', '黑龙江', '吉林', '甘肃',
 
 # 线程数
 THREADNUM = 5
-'''
-爬虫爬取和检测ip的设置条件
-不需要检测ip是否已经存在，因为会定时清理
-'''
-UPDATE_TIME = 30 * 60  # 每半个小时检测一次是否有代理ip失效
-MINNUM = 50  # 当有效的ip值小于一个时 需要启动爬虫进行爬取
 
+# 爬虫爬取和检测ip的设置条件,不需要检测ip是否已经存在，因为会定时清理
+UPDATE_TIME = 30 * 60  # 每半个小时检测一次是否有代理ip失效
+MINNUM = 50  # 当有效的ip值小于50个时 需要启动爬虫进行爬取
 TIMEOUT = 5  # socket延时
 
-'''
-重试次数
-'''
+# 重试次数
 RETRY_TIME = 3
 
-'''
-USER_AGENTS 随机头信息
-'''
+# USER_AGENTS 随机头信息
 USER_AGENTS = [
     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
     "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506)",
@@ -183,6 +175,7 @@ USER_AGENTS = [
 ]
 
 
+# 获取请求头
 def get_header():
     return {
         'User-Agent': random.choice(USER_AGENTS),

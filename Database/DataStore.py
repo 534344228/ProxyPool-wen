@@ -1,8 +1,6 @@
 import sys
 from config import DB_CONFIG
 
-from util.exception import Con_DB_Fail
-
 # 根据配置文件里面连接类型，进入相应数据库操作
 try:
     if DB_CONFIG['DB_CONNECT_TYPE'] == 'pymongo':
@@ -10,21 +8,24 @@ try:
     elif DB_CONFIG['DB_CONNECT_TYPE'] == 'redis':
         from Database.RedisSql import RedisSql as Sql
     else:
-        from Database.Sql import Sql as Sql
+        from Database.Sql import Sql
     sql = Sql()
     sql.init_db()
+    print("Connect Database Successed!")
 except Exception as e:
-    raise Con_DB_Fail
+    print("Error from Database-DataStore")
+    print(e)
 
 
 # 读取队列中的数据，写入数据库中
-def store_date(queue, db_proxy_num):
+def store_data(queue, db_proxy_num):
     successNum = 0
     failNum = 0
     while True:
         try:
             proxy = queue.get(timeout=300)
             if proxy:
+                print("插入代理 : {}".format(proxy))
                 sql.insert(proxy)
                 successNum += 1
             else:
