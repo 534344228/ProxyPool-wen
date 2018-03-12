@@ -21,9 +21,11 @@ def detect_from_db(myip, proxy, proxies_set):
         proxy_str = '%s:%s' % (proxy[0], proxy[1])
         proxies_set.add(proxy_str)
     else:
+        # proxy为score分数,如果分数小于1->删除
         if int(proxy[2]) < 1:
             sql.delete({'ip': proxy[0], 'port': proxy[1]})
         else:
+            # 如果result不存在，score减1分，更新数据库
             score = int(proxy[2]) - 1
             sql.update({'ip': proxy[0], 'port': proxy[1]}, {'score': score})
             proxy_str = '%s:%s' % (proxy[0], proxy[1])
@@ -150,8 +152,12 @@ def _checkHttpProxy(selfip, proxies, isHttp=True):
                 types = 1
             else:
                 types = 0
-
-            return True, types, speed
+            weibourl = 'https://weibo.cn/'
+            res = requests.get(url=weibourl, headers=config.get_header(), timeout=config.TIMEOUT, proxies=proxies)
+            if res.ok:
+                return True, types, speed
+            else:
+                return False, types, speed
         else:
             return False, types, speed
     except Exception as e:
